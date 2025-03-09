@@ -1,0 +1,79 @@
+{
+    "name": "time-tracker",
+    "displayName": "Time Tracker",
+    "description": "Расширение для отслеживания времени работы над кодом и логирования времени в Jira.",
+    "version": "1.0.0",
+    "publisher": "kirill.liubushkin",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*",
+        "onCommand:timeTracker.logTime",
+        "onCommand:timeTracker.configure"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "timeTracker.logTime",
+                "title": "Log Time to Jira"
+            },
+            {
+                "command": "timeTracker.configure",
+                "title": "Configure Time Tracker"
+            }
+        ],
+        "configuration": {
+            "title": "Time Tracker",
+            "properties": {
+            "timeTracker.jiraUrl": {
+                "type": "string",
+                "default": "https://j.yadro.com",
+                "description": "URL вашего Jira (например, https://j.yadro.com)."
+            },
+            "timeTracker.accessToken": {
+                "type": "string",
+                "default": "",
+                "description": "Personal Access Token для доступа к Jira."
+            },
+            "timeTracker.inactivityTimeout": {
+                "type": "number",
+                "default": 600,
+                "description": "Время бездействия в секундах (по умолчанию 10 минут)."
+            },
+            "timeTracker.autoLogging": {
+                "type": "boolean",
+                "default": true,
+                "description": "Включить автоматическое логирование времени."
+            },
+            "timeTracker.autoLoggingTime": {
+                "type": "number",
+                "default": 600,
+                "description": "Время автологирования если провел в задаче больше заданного времени (по умолчанию 10 минут). Другими словами, если сработал таймер бездействия или сменится ветка и до этого было проработано 10 минут, то он предложит это время залогировать. "
+            }
+            }
+      }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext .ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/node": "^16.0.0",
+        "@types/vscode": "^1.75.0",
+        "eslint": "^8.0.0",
+        "typescript": "^4.8.0",
+        "vscode-test": "^1.6.0"
+    },
+    "dependencies": {
+        "crypto-js": "^4.1.1",
+        "node-fetch": "^2.6.7"
+    }
+}
