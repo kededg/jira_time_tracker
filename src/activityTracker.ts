@@ -73,7 +73,7 @@ export class ActivityTracker {
             if (taskId != this.currentTaskId && taskId != "None") {
                 this.outputChannel.appendLine(`[Time Tracker] Ветка изменена. Новая задача: ${taskId}. Previously: ${this.currentTaskId}`);
 
-                const timeSpent = this.timer?.getTime() as number;
+                const timeSpent = Math.floor(this.timer?.getTime() as number / 60);
                 const autoLoggingTime = this.settings?.autoLoggingTime as number;
                 const autoLogging = this.settings?.autoLogging;
 
@@ -89,7 +89,7 @@ export class ActivityTracker {
 
                     if (!autoLogging) {
                         const shouldLogTime = await vscode.window.showWarningMessage(
-                            `Вы переключились на задачу ${taskId}. Залогировать время, потраченное на предыдущую задачу ${timeSpent/60}мин?`,
+                            `Вы переключились на задачу ${taskId}. Залогировать время, потраченное на предыдущую задачу ${timeSpent}мин?`,
                             'Да', 'Нет'
                         );
 
@@ -123,15 +123,10 @@ export class ActivityTracker {
         const {jiraUrl, accessToken } = this.settings;
         const jiraService = new JiraService( jiraUrl, accessToken, this.outputChannel);
 
-        const timeSpent = this.timer?.getTime() as number;
-        if (this.currentTaskId) {
-            const success = await jiraService.logTimeForTask(this.currentTaskId, timeSpent);
-            if (success) {
-                this.timer?.reset();
-            } else {
-                this.outputChannel.appendLine(`[Time Tracker] Не удалось залогировать время в задачу ${this.currentTaskId}.`);
-            }
-        }
+        const timeSpent = Math.floor(this.timer?.getTime() as number/60);
+        const success = await jiraService.logTimeForTask(this.currentTaskId, timeSpent);
+        this.outputChannel.appendLine(`[logTimeForCurrentTask]\tDEBUG: ${success}.`);
+        this.timer?.reset();
     }
 
     public async updateTaskID() {

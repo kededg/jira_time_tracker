@@ -56,7 +56,7 @@ export class Timer {
             this.startPauseStatusBarItem.tooltip = "Pause";
             this.startPauseStatusBarItem.command = "timeTracker.stop";
             this.isRunning = true;
-            this.outputChannel.appendLine(`[Time Tracker] Timer is started.`);
+            this.outputChannel.appendLine(`[start]\tTimer is started.`);
         }
     }
 
@@ -69,7 +69,7 @@ export class Timer {
         this.startPauseStatusBarItem.tooltip = "Start";
         this.startPauseStatusBarItem.command = "timeTracker.start";
         this.isRunning = false;
-        this.outputChannel.appendLine(`[Time Tracker] Timer is paused.`);
+        this.outputChannel.appendLine(`[pause]\tTimer is paused.`);
     }
 
 
@@ -77,13 +77,14 @@ export class Timer {
         this.timeElapsed = 0;
         this.pause();
         this.updateTimer();
-        this.outputChannel.appendLine(`[Time Tracker] Timer was reset.`);
+        this.outputChannel.appendLine(`[reset]\tTimer was reset.`);
     }
 
 
     public setTaskID(taskID: string): void {
-        this.outputChannel.appendLine(`[Time Tracker] Task ID updated ${this.taskID} -> ${taskID}`);
+        this.outputChannel.appendLine(`[setTaskID]\tTask ID updated ${this.taskID} -> ${taskID}`);
         this.taskID = taskID;
+        this.start();
         this.updateTimer();
     }
 
@@ -110,20 +111,20 @@ export class Timer {
         if (spendWorkTime > this.autoLoggingTime) {
             const inactivityTimeoutMin = Math.floor(this.inactivityTimeout/60);
             const spendWorkTimeMin = Math.floor(spendWorkTime/60);
-            this.outputChannel.appendLine(`[Time Tracker] Бездействовали более ${inactivityTimeoutMin} минут. Время работы: ${spendWorkTimeMin} Номер задачи: ${this.taskID}`);
+            this.outputChannel.appendLine(`[handleInactivity]\tБездействовали более ${inactivityTimeoutMin} минут. Время работы: ${spendWorkTimeMin} Номер задачи: ${this.taskID}`);
 
             this.pause();
             let massageInactive = await vscode.window.showWarningMessage(
-                `Вы бездействовали более ${inactivityTimeoutMin} минут. Залогировать ${spendWorkTimeMin} мин в ${this.taskID} Jira?`, { modal: true },
+                `Вы бездействовали более ${inactivityTimeoutMin} минут. Залогировать ${spendWorkTimeMin}мин в ${this.taskID} Jira?`, { modal: true },
                 'Yes'
             );
 
-            this.outputChannel.appendLine(`[Time Tracker] Табло ${massageInactive}`);
+            this.outputChannel.appendLine(`[handleInactivity]\tТабло ${massageInactive}`);
 
             if (massageInactive === 'Yes') {
                 const {jiraUrl, accessToken } = this.settings;
                 const jiraService = new JiraService( jiraUrl, accessToken, this.outputChannel);
-                await jiraService.logTimeForTask(this.taskID, spendWorkTime);
+                await jiraService.logTimeForTask(this.taskID, spendWorkTimeMin);
                 this.reset();
             }
 
