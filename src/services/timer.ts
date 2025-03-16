@@ -74,6 +74,7 @@ export class Timer {
 
 
     public reset(): void {
+        this.timeElapsed = 0;
         this.pause();
         this.updateTimer();
         this.outputChannel.appendLine(`[Time Tracker] Timer was reset.`);
