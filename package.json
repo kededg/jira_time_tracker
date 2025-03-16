@@ -2,7 +2,7 @@
     "name": "time-tracker",
     "displayName": "Time Tracker",
     "description": "Расширение для отслеживания времени работы над кодом и логирования времени в Jira.",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "publisher": "kirill.liubushkin",
     "engines": {
         "vscode": "^1.75.0"
@@ -12,7 +12,6 @@
     ],
     "activationEvents": [
         "*",
-        "onCommand:timeTracker.logTime",
         "onCommand:timeTracker.configure"
     ],
     "main": "./out/extension.js",
@@ -25,6 +24,22 @@
             {
                 "command": "timeTracker.configure",
                 "title": "Configure Time Tracker"
+            },
+            {
+                "command": "timeTracker.start",
+                "title": "Start Time Tracker counter"
+            },
+            {
+                "command": "timeTracker.stop",
+                "title": "Stop Time Tracker counter"
+            },
+            {
+                "command": "timeTracker.reset",
+                "title": "Reset and stop Time Tracker counter"
+            },
+            {
+                "command": "timeTracker.setTask",
+                "title": "Set Jira task ID"
             }
         ],
         "configuration": {

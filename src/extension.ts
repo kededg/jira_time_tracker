@@ -3,6 +3,7 @@ import { ActivityTracker } from './activityTracker';
 import { configureCommand } from './commands/configureCommand';
 import { loadSettings } from './utils/configUtils';
 import { JiraService } from './services/jiraService';
+import {Timer} from  './services/timer';
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Расширение "Time Tracker" активировано.');
@@ -32,7 +33,8 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // Инициализация трекера активности
-    const activityTracker = new ActivityTracker(context, outputChannel);
+    const timer = new Timer(context, outputChannel);
+    const activityTracker = new ActivityTracker(context, outputChannel, timer);
 
     // Регистрация команды для логирования времени
     const logTimeDisposable = vscode.commands.registerCommand('timeTracker.logTime', () => activityTracker.logTimeForCurrentTask());
@@ -41,6 +43,17 @@ export async function activate(context: vscode.ExtensionContext) {
     // Регистрация команды для настройки
     const configureDisposable = vscode.commands.registerCommand('timeTracker.configure', () => configureCommand(context, outputChannel));
     context.subscriptions.push(configureDisposable);
+
+    // Регистрация команды для управление таймером
+    const startTimerDisposable = vscode.commands.registerCommand('timeTracker.start', () => timer.start());
+    const stopTimerDisposable = vscode.commands.registerCommand('timeTracker.stop', () => timer.pause());
+    const resetTimerDisposable = vscode.commands.registerCommand('timeTracker.reset', () => timer.reset());
+    const setTaskID = vscode.commands.registerCommand('timeTracker.setTask', () => activityTracker.updateTaskID());
+    context.subscriptions.push(startTimerDisposable);
+    context.subscriptions.push(stopTimerDisposable);
+    context.subscriptions.push(resetTimerDisposable);
+    context.subscriptions.push(setTaskID);
+
 }
 
 export async function deactivate() {

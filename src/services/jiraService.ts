@@ -26,7 +26,6 @@ export class JiraService {
 
             const response = await fetch(url, {
                 method: 'GET',
-                // headers: {'Authorization': 'Basic ' + btoa(this.email + ':' + this.oauthToken)},
                 headers: {
                     'Authorization': `Bearer ${this.oauthToken}`,
                     'Content-Type': 'application/json',
@@ -59,8 +58,12 @@ export class JiraService {
      * @param {number} timeSpent Время в секундах.
      * @returns {Promise<boolean>} Успешно ли выполнено логирование.
      */
-    async logTime(taskId: string, timeSpent: number): Promise<boolean> {
+    async logTime(taskId: string, timeSpent: number, msg: string = ""): Promise<boolean> {
         const url = `${this.baseUrl}/rest/api/2/issue/${taskId}/worklog`;
+
+        if (msg == "") {
+            msg = "Work on Issue";
+        }
 
         try {
             const response = await fetch(url, {
@@ -71,7 +74,7 @@ export class JiraService {
                 },
                 body: JSON.stringify({
                     timeSpentSeconds: timeSpent,
-                    comment: `VSCode TimeTracker in issue ${taskId}`
+                    comment: `VSCode TimeTracker: ${msg}`
                 }),
             });
 
@@ -91,5 +94,17 @@ export class JiraService {
             }
             return false;
         }
+    }
+
+    public async logTimeForTask(task: string, time: number): Promise<boolean> {
+        const success = await this.logTime(task, time);
+        if (success) {
+            this.outputChannel.appendLine(`[Time Tracker] Время успешно залогировано в задачу ${task}.`);
+            await vscode.window.showInformationMessage(
+                `Время успешно залогировано в задачу ${task}. ${time/60}мин`);
+        } else {
+            this.outputChannel.appendLine(`[Time Tracker] Не удалось залогировать время в задачу ${task}.`);
+        }
+        return success;
     }
 }

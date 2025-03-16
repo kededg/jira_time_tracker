@@ -32,10 +32,10 @@ export class GitService {
     /**
      * Извлекает номер задачи Jira из имени ветки.
      * @param {string} branchName Имя ветки.
-     * @returns {string | null} Номер задачи Jira или null, если не найден.
+     * @returns {string | null} Номер задачи Jira or None, если не найден.
      */
-    extractJiraTaskId(branchName: string): string | null {
-        const match = branchName.match(/[A-Z]+-\d+/);
-        return match ? match[0] : null;
+    extractJiraTaskId(branchName: string): string {
+        const match = branchName.match(/[A-Z]+_\d+/);
+        return match ? match[0].replace(/_/g, "-") : "None";
     }
 }
