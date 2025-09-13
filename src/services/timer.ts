@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import { loadSettings } from '../utils/configUtils';
 import { JiraService } from '../services/jiraService';
+import { AuthManager } from '../utils/AuthManager';
 
 export class Timer {
     private outputChannel: vscode.OutputChannel;
@@ -15,8 +17,6 @@ export class Timer {
     private isRunning: boolean = false;
     private inactivityTimeout: number;
     private autoLoggingTime: number;
-
-    private settings: any;
 
     constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, inactivityTimeout: number, autoLoggingTime: number) {
         this.outputChannel = outputChannel;
@@ -47,6 +47,7 @@ export class Timer {
     }
 
     public start(): void {
+        this.updateTimeoutTimer();
         if (!this.timer) {
             this.timer = setInterval(() => this.updateTimer(), 1000);
             this.startPauseStatusBarItem.text = "$(debug-pause)";
@@ -58,6 +59,7 @@ export class Timer {
     }
 
     public pause(): void {
+        this.resetTimeoutTimer();
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
@@ -96,15 +98,18 @@ export class Timer {
     }
 
 
-    public resetTimeoutTimer(){
-        if (this.timeoutTimer) {
-            clearTimeout(this.timeoutTimer);
-        }
-        this.outputChannel.appendLine(`[resetTimeoutTimer] Reset Timeout`);
+    public updateTimeoutTimer(){
+        this.resetTimeoutTimer();
 
         this.timeoutTimer = setTimeout(async () => {
             await this.handleInactivity();
         }, this.inactivityTimeout * 1000);
+    }
+
+    public resetTimeoutTimer(){
+        if (this.timeoutTimer) {
+            clearTimeout(this.timeoutTimer);
+        }
     }
 
 
@@ -126,10 +131,14 @@ export class Timer {
 
             if (massageInactive === 'Yes') {
                 this.reset();
-                const {jiraUrl, accessToken} = this.settings;
-                const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
+                const settings = await loadSettings();
+                const jiraUrl = settings?.jiraUrl as string;
+                const authManager = new AuthManager(this.context);
+                const oauthToken = await authManager.getToken();
+                const jiraService = new JiraService(jiraUrl, oauthToken, this.outputChannel);
+
                 await jiraService.logTimeForTask(this.taskID, spendWorkTimeMin);
-                this.resetTimeoutTimer();
+                this.updateTimeoutTimer();
             }
 
             this.start();

@@ -1,15 +1,8 @@
 import * as vscode from 'vscode';
 import { saveSettings, loadSettings } from '../utils/configUtils';
 import fetch from 'node-fetch';
-import * as crypto from 'crypto';
+import { AuthManager } from '../utils/AuthManager';
 
-/**
- * Generates a random secret for encryption.
- * @returns {string} A random secret.
- */
-function generateEncryptionSecret(): string {
-    return crypto.randomBytes(32).toString('hex'); // Generate a 32-byte random value
-}
 
 /**
  * Opens the page for generating a Personal Access Token.
@@ -25,7 +18,7 @@ function openTokenGenerationPage(baseUrl: string) {
  * @param {string} token Personal Access Token.
  * @returns {Promise<boolean>} True if the token is valid, otherwise False.
  */
-async function validateToken(jiraUrl: string, token: string): Promise<boolean> {
+async function validateToken(jiraUrl: string, token: string | undefined): Promise<boolean> {
     try {
         const response = await fetch(`${jiraUrl}/rest/api/2/myself`, {
             method: 'GET',
@@ -46,7 +39,7 @@ async function validateToken(jiraUrl: string, token: string): Promise<boolean> {
     }
 }
 
-async function updateToken(jiraUrl: string, outputChannel: vscode.OutputChannel, config: vscode.WorkspaceConfiguration): Promise<string> {
+async function updateToken(context: vscode.ExtensionContext, jiraUrl: string, outputChannel: vscode.OutputChannel) {
     openTokenGenerationPage(jiraUrl); // Open the page for generating the token
 
     let token = await vscode.window.showInputBox({
@@ -69,14 +62,8 @@ async function updateToken(jiraUrl: string, outputChannel: vscode.OutputChannel,
         return "";
     }
 
-    config.update('accessToken', token, vscode.ConfigurationTarget.Global)
-        .then(() => {
-                outputChannel.appendLine('[Time Tracker] Configuration updated successfully.');
-            }, (error: unknown) => {
-                outputChannel.appendLine(`[Time Tracker] Failed to update configuration: ${error}`);
-            });
-
-    return token;
+    const authManager = new AuthManager(context);
+    await authManager.saveToken(token);
 }
 
 /**
@@ -104,30 +91,18 @@ export async function configureCommand(context: vscode.ExtensionContext, outputC
         } else {
             config.update('jiraUrl', jiraUrl, vscode.ConfigurationTarget.Global)
             .then(() => {
-                    outputChannel.appendLine('[Time Tracker] Configuration updated successfully.');
-                }, (error: unknown) => {
-                    outputChannel.appendLine(`[Time Tracker] Failed to update configuration: ${error}`);
-                });
+                outputChannel.appendLine('[Time Tracker] Configuration updated successfully.');
+            }, (error: unknown) => {
+                outputChannel.appendLine(`[Time Tracker] Failed to update configuration: ${error}`);
+            });
         }
     }
 
     outputChannel.appendLine(`[Time Tracker] Selected Jira URL: ${jiraUrl}`);
 
-    let accessToken = settings?.accessToken as string;
+    await updateToken(context, jiraUrl, outputChannel);
 
-    if (accessToken != "undefined") {
-        const isValid = await validateToken(jiraUrl, accessToken);
-        if (isValid) {
-            outputChannel.appendLine('[Time Tracker] Token is valid. Settings loaded.');
-        } else {
-            outputChannel.appendLine('[Time Tracker] Warning: Token is invalid. Please generate a new one.');
-            accessToken = await updateToken(jiraUrl, outputChannel, config);
-        }
-    } else {
-        accessToken = await updateToken(jiraUrl, outputChannel, config);
-    }
-
-    await saveSettings(jiraUrl, accessToken);
+    await saveSettings(jiraUrl);
 
     // Display configuration information
     outputChannel.appendLine(`[Time Tracker] Settings applied successfully`);

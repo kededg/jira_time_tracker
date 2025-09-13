@@ -4,6 +4,7 @@ import { configureCommand } from './commands/configureCommand';
 import { loadSettings } from './utils/configUtils';
 import { JiraService } from './services/jiraService';
 import { Timer } from './services/timer';
+import { AuthManager } from './utils/AuthManager';
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Extension "Time Tracker" activated.');
@@ -15,11 +16,14 @@ export async function activate(context: vscode.ExtensionContext) {
     // Load settings
     const settings = await loadSettings();
     if (settings) {
-        const { jiraUrl, accessToken, inactivityTimeout, autoLogging, autoLoggingTime } = settings;
+        const { jiraUrl, inactivityTimeout, autoLogging, autoLoggingTime } = settings;
         outputChannel.appendLine(`[config]\nURL:\t\t\t${jiraUrl}\nInact Timeout:\t${inactivityTimeout}m\nAuto logging:\t${autoLogging}\nAuto log Time:\t${autoLoggingTime}m`);
 
+        const authManager = new AuthManager(context);
+        const oauthToken = await authManager.getToken();
+
         // Check Jira credentials
-        const jiraService = new JiraService(jiraUrl, accessToken, outputChannel);
+        const jiraService = new JiraService(jiraUrl, oauthToken, outputChannel);
         const isValid = await jiraService.validateToken();
         if (isValid) {
             outputChannel.appendLine('[Time Tracker] Jira credentials are valid.');
@@ -35,6 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize activity tracker
     const timer = new Timer(context, outputChannel, settings?.inactivityTimeout as number, settings?.autoLoggingTime as number);
     const activityTracker = new ActivityTracker(context, outputChannel, timer);
+    await activityTracker.startTracking(context);
 
     // Register command for logging time
     const logTimeDisposable = vscode.commands.registerCommand('timeTracker.logTime', () => activityTracker.logTimeForCurrentTask());

@@ -6,10 +6,10 @@ import * as vscode from 'vscode';
  */
 export class JiraService {
     private baseUrl: string;
-    private oauthToken: string;
+    private oauthToken: string | undefined;
     private outputChannel: vscode.OutputChannel;
 
-    constructor(baseUrl: string, oauthToken: string, outputChannel: vscode.OutputChannel) {
+    constructor(baseUrl: string, oauthToken: string | undefined, outputChannel: vscode.OutputChannel) {
         this.baseUrl = baseUrl;
         this.oauthToken = oauthToken;
         this.outputChannel = outputChannel;

@@ -51,13 +51,8 @@
             "properties": {
                 "timeTracker.jiraUrl": {
                     "type": "string",
-                    "default": "https://j.yadro.com",
-                        "description": "Your Jira URL (e.g., https://j.yadro.com)."
-                },
-                "timeTracker.accessToken": {
-                    "type": "string",
-                    "default": "",
-                        "description": "Personal Access Token for accessing Jira."
+                    "default": "https://jira.com",
+                        "description": "Your Jira URL (e.g., https://jira.com)."
                 },
                 "timeTracker.inactivityTimeout": {
                     "type": "number",

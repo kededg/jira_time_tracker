@@ -3,44 +3,33 @@ import { GitService } from './services/gitService';
 import { JiraService } from './services/jiraService';
 import { loadSettings } from './utils/configUtils';
 import { Timer } from './services/timer';
+import { AuthManager } from './utils/AuthManager';
 
 export class ActivityTracker {
-    private lastActivityTime: number;
-    private inactivityTimeout: number; // Inactivity time in milliseconds
     private timer: Timer | null;
-    private timeoutTimer: NodeJS.Timeout | null = null;
     private totalActiveTime: number; // Total active time in milliseconds
     private gitService: GitService;
     private currentTaskId: string; // Current Jira task
     private outputChannel: vscode.OutputChannel;
-    private isTaskRecognized: boolean; // Flag for tracking task recognition
     private settings: any;
-    private massageInactive: any;
 
     constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, timer: Timer) {
-        this.lastActivityTime = Date.now();
-        this.inactivityTimeout = 10 * 60 * 1000; // 10 minutes by default
         this.timer = timer;
-        this.timeoutTimer = null;
         this.totalActiveTime = 0;
         this.gitService = new GitService();
         this.currentTaskId = "None";
         this.outputChannel = outputChannel;
-        this.isTaskRecognized = false; // Initially the task is not recognized
-
-        this.startTracking(context);
     }
 
     /**
      * Starts tracking user activity.
      */
-    private async startTracking(context: vscode.ExtensionContext) {
+    public async startTracking(context: vscode.ExtensionContext) {
         this.settings = await loadSettings();
-        this.inactivityTimeout = this.settings?.inactivityTimeout as number * 1000;
 
         const handleEvent = (event: any) => {
             if (this.timer?.isRun()) {
-                this.timer?.resetTimeoutTimer();
+                this.timer?.updateTimeoutTimer();
             }
             this.handleBranchChange();
         };
@@ -50,9 +39,9 @@ export class ActivityTracker {
         context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(handleEvent));
         context.subscriptions.push(vscode.window.onDidChangeWindowState(handleEvent));
         context.subscriptions.push(vscode.window.onDidChangeTerminalState(handleEvent));
-        context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(handleEvent));
         context.subscriptions.push(vscode.window.onDidChangeTextEditorVisibleRanges(handleEvent));
         context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(handleEvent));
+        context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(handleEvent));
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(handleEvent));
         context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(handleEvent));
         context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(handleEvent));
@@ -84,8 +73,11 @@ export class ActivityTracker {
                         return;
                     }
 
-                    const { jiraUrl, accessToken } = this.settings;
-                    const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
+                    const authManager = new AuthManager(this.context);
+                    const oauthToken = await authManager.getToken();
+
+                    const { jiraUrl } = this.settings;
+                    const jiraService = new JiraService(jiraUrl, oauthToken, this.outputChannel);
 
                     if (!autoLogging) {
                         const shouldLogTime = await vscode.window.showWarningMessage(
@@ -120,8 +112,10 @@ export class ActivityTracker {
             return;
         }
 
-        const { jiraUrl, accessToken } = this.settings;
-        const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
+        const { jiraUrl } = this.settings;
+        const authManager = new AuthManager(this.context);
+        const oauthToken = await authManager.getToken();
+        const jiraService = new JiraService(jiraUrl, oauthToken, this.outputChannel);
 
         const timeSpent = Math.floor(this.timer?.getTime() as number / 60);
         const success = await jiraService.logTimeForTask(this.currentTaskId, timeSpent);
