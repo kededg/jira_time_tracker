@@ -12,7 +12,6 @@ export class Timer {
     private timer: NodeJS.Timeout | null = null;
     private timeoutTimer: NodeJS.Timeout | null = null;
     private timeElapsed: number = 0;
-    private timeInactive: number = 0;
     private isRunning: boolean = false;
     private inactivityTimeout: number;
     private autoLoggingTime: number;

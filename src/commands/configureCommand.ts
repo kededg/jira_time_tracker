@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { EncryptionService } from '../services/encryptionService';
 import { saveSettings, loadSettings } from '../utils/configUtils';
 import fetch from 'node-fetch';
 import * as crypto from 'crypto';
