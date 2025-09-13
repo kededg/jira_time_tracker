@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import * as child_process from 'child_process';
 
 /**
- * Сервис для работы с Git.
+ * Service for working with Git.
  */
 export class GitService {
     /**
-     * Получает имя текущей ветки Git.
-     * @returns {Promise<string | null>} Имя ветки или null, если не удалось определить.
+     * Gets the name of the current Git branch.
+     * @returns {Promise<string | null>} The branch name or null if it could not be determined.
      */
     async getCurrentBranch(): Promise<string | null> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -20,7 +20,7 @@ export class GitService {
         return new Promise((resolve, reject) => {
             child_process.exec('git branch --show-current', { cwd: rootPath }, (error, stdout, stderr) => {
                 if (error) {
-                    vscode.window.showErrorMessage('Не удалось получить текущую ветку Git.');
+                    vscode.window.showErrorMessage('Failed to get the current Git branch.');
                     resolve(null);
                 } else {
                     resolve(stdout.trim());
@@ -30,9 +30,9 @@ export class GitService {
     }
 
     /**
-     * Извлекает номер задачи Jira из имени ветки.
-     * @param {string} branchName Имя ветки.
-     * @returns {string | null} Номер задачи Jira or None, если не найден.
+     * Extracts the Jira task number from the branch name.
+     * @param {string} branchName The name of the branch.
+     * @returns {string | null} The Jira task number or null if not found.
      */
     extractJiraTaskId(branchName: string): string {
         const match = branchName.match(/[A-Z]+_\d+/);

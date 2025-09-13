@@ -5,15 +5,15 @@ import fetch from 'node-fetch';
 import * as crypto from 'crypto';
 
 /**
- * Генерирует случайный секрет для шифрования.
- * @returns {string} Случайный секрет.
+ * Generates a random secret for encryption.
+ * @returns {string} A random secret.
  */
 function generateEncryptionSecret(): string {
-    return crypto.randomBytes(32).toString('hex'); // Генерация 32-байтового случайного значения
+    return crypto.randomBytes(32).toString('hex'); // Generate a 32-byte random value
 }
 
 /**
- * Открывает страницу для генерации Personal Access Token.
+ * Opens the page for generating a Personal Access Token.
  */
 function openTokenGenerationPage(baseUrl: string) {
     const tokenGenerationUrl = `${baseUrl}/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens`;
@@ -21,10 +21,10 @@ function openTokenGenerationPage(baseUrl: string) {
 }
 
 /**
- * Проверяет валидность Personal Access Token.
- * @param {string} jiraUrl URL Jira.
+ * Validates the Personal Access Token.
+ * @param {string} jiraUrl Jira URL.
  * @param {string} token Personal Access Token.
- * @returns {Promise<boolean>} True, если токен действителен, иначе False.
+ * @returns {Promise<boolean>} True if the token is valid, otherwise False.
  */
 async function validateToken(jiraUrl: string, token: string): Promise<boolean> {
     try {
@@ -37,36 +37,36 @@ async function validateToken(jiraUrl: string, token: string): Promise<boolean> {
         });
 
         if (!response.ok) {
-            throw new Error(`Ошибка при проверке токена: ${response.statusText}`);
+            throw new Error(`Error validating token: ${response.statusText}`);
         }
 
         return true;
     } catch (error) {
-        console.error('Ошибка при проверке токена:', error);
+        console.error('Error validating token:', error);
         return false;
     }
 }
 
 async function updateToken(jiraUrl: string, outputChannel: vscode.OutputChannel, config: vscode.WorkspaceConfiguration): Promise<string> {
-    openTokenGenerationPage(jiraUrl); // Открываем страницу для генерации токена
+    openTokenGenerationPage(jiraUrl); // Open the page for generating the token
 
     let token = await vscode.window.showInputBox({
-        prompt: 'Введите Personal Access Token, сгенерированный в Jira',
+        prompt: 'Enter the Personal Access Token generated in Jira',
         placeHolder: 'Personal Access Token',
         password: true,
-        ignoreFocusOut: true, // Окно не закроется при потере фокуса
+        ignoreFocusOut: true, // The window will not close when focus is lost
     }) as string;
 
     if (!token) {
-        outputChannel.appendLine('[Time Tracker] Ошибка: Токен обязателен для настройки.');
+        outputChannel.appendLine('[Time Tracker] Error: Token is required for setup.');
         return "";
     } else {
-        outputChannel.appendLine('[Time Tracker] Токен принят.');
+        outputChannel.appendLine('[Time Tracker] Token accepted.');
     }
 
     const isValid = await validateToken(jiraUrl, token);
     if (!isValid) {
-        outputChannel.appendLine('[Time Tracker] Ошибка: Токен недействителен. Пожалуйста, проверьте токен.');
+        outputChannel.appendLine('[Time Tracker] Error: Invalid token. Please check the token.');
         return "";
     }
 
@@ -81,8 +81,8 @@ async function updateToken(jiraUrl: string, outputChannel: vscode.OutputChannel,
 }
 
 /**
- * Команда для настройки расширения.
- * @param {vscode.ExtensionContext} context Контекст расширения.
+ * Command for configuring the extension.
+ * @param {vscode.ExtensionContext} context Extension context.
  */
 export async function configureCommand(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
     let config = vscode.workspace.getConfiguration('timeTracker');
@@ -93,14 +93,14 @@ export async function configureCommand(context: vscode.ExtensionContext, outputC
 
     if (!jiraUrl) {
         jiraUrl = await vscode.window.showInputBox({
-            prompt: 'Введите URL вашего Jira (например, https://j.yadro.com)',
+            prompt: 'Enter your Jira URL (e.g., https://j.yadro.com)',
             placeHolder: 'https://j.yadro.com',
-            value: 'https://j.yadro.com', // Значение по умолчанию
-            ignoreFocusOut: true, // Окно не закроется при потере фокуса
+            value: 'https://j.yadro.com', // Default value
+            ignoreFocusOut: true, // The window will not close when focus is lost
         }) as string;
 
         if (!jiraUrl) {
-            outputChannel.appendLine('[Time Tracker] Ошибка: URL Jira обязателен для настройки.');
+            outputChannel.appendLine('[Time Tracker] Error: Jira URL is required for setup.');
             return;
         } else {
             config.update('jiraUrl', jiraUrl, vscode.ConfigurationTarget.Global)
@@ -112,25 +112,24 @@ export async function configureCommand(context: vscode.ExtensionContext, outputC
         }
     }
 
-    outputChannel.appendLine(`[Time Tracker] Выбран URL Jira: ${jiraUrl}`);
+    outputChannel.appendLine(`[Time Tracker] Selected Jira URL: ${jiraUrl}`);
 
     let accessToken = settings?.accessToken as string;
 
-    if (accessToken  != "undefined") {
+    if (accessToken != "undefined") {
         const isValid = await validateToken(jiraUrl, accessToken);
         if (isValid) {
-            outputChannel.appendLine('[Time Tracker] Токен действителен. Настройки загружены.');
+            outputChannel.appendLine('[Time Tracker] Token is valid. Settings loaded.');
         } else {
-            outputChannel.appendLine('[Time Tracker] Предупреждение: Токен недействителен. Пожалуйста, сгенерируйте новый.');
-
-            accessToken  = await updateToken(jiraUrl, outputChannel, config);
+            outputChannel.appendLine('[Time Tracker] Warning: Token is invalid. Please generate a new one.');
+            accessToken = await updateToken(jiraUrl, outputChannel, config);
         }
     } else {
-        accessToken  = await updateToken(jiraUrl, outputChannel, config);
+        accessToken = await updateToken(jiraUrl, outputChannel, config);
     }
 
     await saveSettings(jiraUrl, accessToken);
 
-    // Вывод информации о конфигурации
-    outputChannel.appendLine(`[Time Tracker] Настройки успешно применены`);
+    // Display configuration information
+    outputChannel.appendLine(`[Time Tracker] Settings applied successfully`);
 }

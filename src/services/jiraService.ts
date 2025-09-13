@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import * as vscode from 'vscode';
 
 /**
- * Сервис для работы с Jira.
+ * Service for working with Jira.
  */
 export class JiraService {
     private baseUrl: string;
@@ -16,13 +16,13 @@ export class JiraService {
     }
 
     /**
-     * Проверяет валидность Personal Access Token.
-     * @returns {Promise<boolean>} True, если токен действителен, иначе False.
+     * Checks the validity of a Personal Access Token.
+     * @returns {Promise<boolean>} True if the token is valid, otherwise False.
      */
     async validateToken(): Promise<boolean> {
         try {
             const url = `${this.baseUrl}/rest/api/2/myself`;
-            this.outputChannel.appendLine(`[validateToken]\tВыполнение запроса к: ${url}`);
+            this.outputChannel.appendLine(`[validateToken]\tExecuting request to: ${url}`);
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -34,29 +34,29 @@ export class JiraService {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                this.outputChannel.appendLine(`[validateToken]\tОшибка при проверке токена: ${response.statusText}`);
-                this.outputChannel.appendLine(`[validateToken]\tДетали ошибки: ${errorText}`);
+                this.outputChannel.appendLine(`[validateToken]\tError checking token: ${response.statusText}`);
+                this.outputChannel.appendLine(`[validateToken]\tError details: ${errorText}`);
                 return false;
             }
 
-            this.outputChannel.appendLine(`[validateToken]\tУспех при проверке токена: ${response.statusText}`);
+            this.outputChannel.appendLine(`[validateToken]\tToken validation successful: ${response.statusText}`);
 
             return true;
         } catch (error) {
             if (error instanceof Error) {
-                this.outputChannel.appendLine(`[validateToken]\tОшибка при проверке токена: ${error.message}`);
+                this.outputChannel.appendLine(`[validateToken]\tError checking token: ${error.message}`);
             } else {
-                this.outputChannel.appendLine(`[validateToken]\tОшибка при проверке токена: ${String(error)}`);
+                this.outputChannel.appendLine(`[validateToken]\tError checking token: ${String(error)}`);
             }
             return false;
         }
     }
 
     /**
-     * Логирует время в задачу Jira.
-     * @param {string} taskId Номер задачи Jira.
-     * @param {number} timeSpent Время в минутах.
-     * @returns {Promise<boolean>} Успешно ли выполнено логирование.
+     * Logs time to a Jira task.
+     * @param {string} taskId Jira task ID.
+     * @param {number} timeSpent Time in minutes.
+     * @returns {Promise<boolean>} Whether logging was successful.
      */
     async logTime(taskId: string, timeSpent: number, msg: string = ""): Promise<boolean> {
         const url = `${this.baseUrl}/rest/api/2/issue/${taskId}/worklog`;
@@ -80,17 +80,17 @@ export class JiraService {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                this.outputChannel.appendLine(`[logTime]\tОшибка при логировании времени: ${response.statusText}`);
-                this.outputChannel.appendLine(`[logTime]\tДетали ошибки: ${errorText}`);
+                this.outputChannel.appendLine(`[logTime]\tError logging time: ${response.statusText}`);
+                this.outputChannel.appendLine(`[logTime]\tError details: ${errorText}`);
                 return false;
             }
 
             return true;
         } catch (error) {
             if (error instanceof Error) {
-                this.outputChannel.appendLine(`[logTime]\tОшибка при логировании времени в Jira: ${error.message} URL: ${url} Task: ${taskId} Time: ${timeSpent} Msg: ${msg}`);
+                this.outputChannel.appendLine(`[logTime]\tError logging time to Jira: ${error.message} URL: ${url} Task: ${taskId} Time: ${timeSpent} Msg: ${msg}`);
             } else {
-                this.outputChannel.appendLine(`[logTime]\tОшибка при логировании времени в Jira: ${String(error)} URL: ${url} Task: ${taskId} Time: ${timeSpent} Msg: ${msg}`);
+                this.outputChannel.appendLine(`[logTime]\tError logging time to Jira: ${String(error)} URL: ${url} Task: ${taskId} Time: ${timeSpent} Msg: ${msg}`);
             }
             return false;
         }
@@ -99,11 +99,11 @@ export class JiraService {
     public async logTimeForTask(task: string, time: number, msg: string = ""): Promise<boolean> {
         const success = await this.logTime(task, time, msg);
         if (success) {
-            this.outputChannel.appendLine(`[logTimeForTask]\tВремя успешно залогировано в задачу ${task}.`);
+            this.outputChannel.appendLine(`[logTimeForTask]\tTime successfully logged to task ${task}.`);
             await vscode.window.showInformationMessage(
-                `Время успешно залогировано в задачу ${task}. ${time}мин`);
+                `Time successfully logged to task ${task}. ${time}min`);
         } else {
-            this.outputChannel.appendLine(`[logTimeForTask]\tНе удалось залогировать время в задачу ${task}.`);
+            this.outputChannel.appendLine(`[logTimeForTask]\tFailed to log time to task ${task}.`);
         }
         return success;
     }

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { loadSettings } from '../utils/configUtils';
 import { JiraService } from '../services/jiraService';
 
 export class Timer {
@@ -13,14 +12,17 @@ export class Timer {
     private timer: NodeJS.Timeout | null = null;
     private timeoutTimer: NodeJS.Timeout | null = null;
     private timeElapsed: number = 0;
+    private timeInactive: number = 0;
     private isRunning: boolean = false;
     private inactivityTimeout: number;
     private autoLoggingTime: number;
 
     private settings: any;
 
-    constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
+    constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, inactivityTimeout: number, autoLoggingTime: number) {
         this.outputChannel = outputChannel;
+        this.inactivityTimeout = inactivityTimeout * 60;
+        this.autoLoggingTime = autoLoggingTime * 60;;
 
         this.infoStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.infoStatusBarItem.text = "Time track: 00:00:00 | Task: None";
@@ -41,10 +43,6 @@ export class Timer {
         this.resetStatusBarItem.show();
         context.subscriptions.push(this.resetStatusBarItem);
 
-
-        this.settings = loadSettings();
-        this.inactivityTimeout = this.settings?.inactivityTimeout as number;
-        this.autoLoggingTime = this.settings?.autoLoggingTime as number;
         this.timer = null;
         this.timeoutTimer = null;
     }
@@ -103,29 +101,36 @@ export class Timer {
         if (this.timeoutTimer) {
             clearTimeout(this.timeoutTimer);
         }
-        this.timeoutTimer = setTimeout(() => this.handleInactivity(), this.inactivityTimeout);
+        this.outputChannel.appendLine(`[resetTimeoutTimer] Reset Timeout`);
+
+        this.timeoutTimer = setTimeout(async () => {
+            await this.handleInactivity();
+        }, this.inactivityTimeout * 1000);
     }
+
 
     private async handleInactivity() {
         let spendWorkTime = this.timeElapsed - this.inactivityTimeout;
+        this.outputChannel.appendLine(`[handleInactivity]\tCurrent time cnt: ${this.timeElapsed} Inactive timeout: ${this.inactivityTimeout}`);
         if (spendWorkTime > this.autoLoggingTime) {
             const inactivityTimeoutMin = Math.floor(this.inactivityTimeout/60);
             const spendWorkTimeMin = Math.floor(spendWorkTime/60);
-            this.outputChannel.appendLine(`[handleInactivity]\tБездействовали более ${inactivityTimeoutMin} минут. Время работы: ${spendWorkTimeMin} Номер задачи: ${this.taskID}`);
+            this.outputChannel.appendLine(`[handleInactivity]\tInactive for more than ${inactivityTimeoutMin} minutes. Work time: ${spendWorkTimeMin}. Task ID: ${this.taskID}`);
 
             this.pause();
             let massageInactive = await vscode.window.showWarningMessage(
-                `Вы бездействовали более ${inactivityTimeoutMin} минут. Залогировать ${spendWorkTimeMin}мин в ${this.taskID} Jira?`, { modal: true },
+                `You were inactive for more than ${inactivityTimeoutMin} minutes. Log ${spendWorkTimeMin} minutes to ${this.taskID} Jira task?`, { modal: true },
                 'Yes'
             );
 
-            this.outputChannel.appendLine(`[handleInactivity]\tТабло ${massageInactive}`);
+            this.outputChannel.appendLine(`[handleInactivity]\tDialog result ${massageInactive}`);
 
             if (massageInactive === 'Yes') {
-                const {jiraUrl, accessToken } = this.settings;
-                const jiraService = new JiraService( jiraUrl, accessToken, this.outputChannel);
-                await jiraService.logTimeForTask(this.taskID, spendWorkTimeMin);
                 this.reset();
+                const {jiraUrl, accessToken} = this.settings;
+                const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
+                await jiraService.logTimeForTask(this.taskID, spendWorkTimeMin);
+                this.resetTimeoutTimer();
             }
 
             this.start();

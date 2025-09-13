@@ -1,14 +1,16 @@
 import * as vscode from 'vscode';
 
 /**
- * Загружает настройки расширения.
+ * Loads extension settings.
  */
+
+
 export async function loadSettings(): Promise<{jiraUrl: string, accessToken: string, inactivityTimeout: number, autoLogging: boolean, autoLoggingTime: number} | null> {
     const config = vscode.workspace.getConfiguration('timeTracker');
 
     let jiraUrl = config.get<string>('jiraUrl') as string;
     let accessToken = config.get<string>('accessToken') as string;
-    let inactivityTimeout = config.get<number>('inactivityTimeout');
+    let inactivityTimeout = config.get<number>('inactivityTimeout') as number;
     let autoLogging = config.get<boolean>('autoLogging');
     let autoLoggingTime = config.get<number>('autoLoggingTime');
 
@@ -16,11 +18,12 @@ export async function loadSettings(): Promise<{jiraUrl: string, accessToken: str
         return null;
     }
 
+
     return {jiraUrl, accessToken, inactivityTimeout, autoLogging, autoLoggingTime};
 }
 
 /**
- * Сохраняет настройки расширения.
+ * Saves extension settings.
  */
 export async function saveSettings(jiraUrl: string, accessToken: string): Promise<void> {
     const config = vscode.workspace.getConfiguration('timeTracker');

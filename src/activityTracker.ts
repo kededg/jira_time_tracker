@@ -2,50 +2,50 @@ import * as vscode from 'vscode';
 import { GitService } from './services/gitService';
 import { JiraService } from './services/jiraService';
 import { loadSettings } from './utils/configUtils';
-import {Timer} from  './services/timer';
+import { Timer } from './services/timer';
 
 export class ActivityTracker {
     private lastActivityTime: number;
-    private inactivityTimeout: number; // Время бездействия в миллисекундах
+    private inactivityTimeout: number; // Inactivity time in milliseconds
     private timer: Timer | null;
     private timeoutTimer: NodeJS.Timeout | null = null;
-    private totalActiveTime: number; // Общее время активности в миллисекундах
+    private totalActiveTime: number; // Total active time in milliseconds
     private gitService: GitService;
-    private currentTaskId: string; // Текущая задача Jira
+    private currentTaskId: string; // Current Jira task
     private outputChannel: vscode.OutputChannel;
-    private isTaskRecognized: boolean; // Флаг для отслеживания распознавания задачи
+    private isTaskRecognized: boolean; // Flag for tracking task recognition
     private settings: any;
     private massageInactive: any;
 
     constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, timer: Timer) {
         this.lastActivityTime = Date.now();
-        this.inactivityTimeout = 10 * 60 * 1000; // 10 минут по умолчанию
+        this.inactivityTimeout = 10 * 60 * 1000; // 10 minutes by default
         this.timer = timer;
         this.timeoutTimer = null;
         this.totalActiveTime = 0;
         this.gitService = new GitService();
         this.currentTaskId = "None";
         this.outputChannel = outputChannel;
-        this.isTaskRecognized = false; // Изначально задача не распознана
+        this.isTaskRecognized = false; // Initially the task is not recognized
 
         this.startTracking(context);
     }
 
     /**
-     * Начинает отслеживание активности пользователя.
+     * Starts tracking user activity.
      */
     private async startTracking(context: vscode.ExtensionContext) {
         this.settings = await loadSettings();
         this.inactivityTimeout = this.settings?.inactivityTimeout as number * 1000;
 
         const handleEvent = (event: any) => {
-            if (!this.timer?.isRun()) {
+            if (this.timer?.isRun()) {
                 this.timer?.resetTimeoutTimer();
             }
             this.handleBranchChange();
         };
 
-        // Подписываемся на каждое событие
+        // Subscribe to each event
         context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(handleEvent));
         context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(handleEvent));
         context.subscriptions.push(vscode.window.onDidChangeWindowState(handleEvent));
@@ -64,36 +64,36 @@ export class ActivityTracker {
 
 
     /**
-     * Обрабатывает смену ветки.
+     * Handles branch change.
      */
     private async handleBranchChange() {
         const branchName = await this.gitService.getCurrentBranch();
         if (branchName) {
             const taskId = this.gitService.extractJiraTaskId(branchName) as string;
             if (taskId != this.currentTaskId && taskId != "None") {
-                this.outputChannel.appendLine(`[Time Tracker] Ветка изменена. Новая задача: ${taskId}. Previously: ${this.currentTaskId}`);
+                this.outputChannel.appendLine(`[Time Tracker] Branch changed. New task: ${taskId}. Previously: ${this.currentTaskId}`);
 
                 const timeSpent = Math.floor(this.timer?.getTime() as number / 60);
                 const autoLoggingTime = this.settings?.autoLoggingTime as number;
                 const autoLogging = this.settings?.autoLogging;
 
-                // Предлагаем залогировать время, если задача изменилась и время больше заданного
+                // Offer to log time if the task has changed and time exceeds the specified amount
                 if (autoLoggingTime < timeSpent) {
                     if (!this.settings) {
-                        this.outputChannel.appendLine(`[Time Tracker] Не удалось залогировать время в задачу ${this.currentTaskId}. Конфигурация отсутствует.`);
+                        this.outputChannel.appendLine(`[Time Tracker] Failed to log time for task ${this.currentTaskId}. Configuration missing.`);
                         return;
                     }
 
-                    const {jiraUrl, accessToken } = this.settings;
-                    const jiraService = new JiraService( jiraUrl, accessToken, this.outputChannel);
+                    const { jiraUrl, accessToken } = this.settings;
+                    const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
 
                     if (!autoLogging) {
                         const shouldLogTime = await vscode.window.showWarningMessage(
-                            `Вы переключились на задачу ${taskId}. Залогировать время, потраченное на предыдущую задачу ${timeSpent}мин?`,
-                            'Да', 'Нет'
+                            `You switched to task ${taskId}. Log time spent on previous task ${timeSpent}min?`,
+                            'Yes', 'No'
                         );
 
-                        if (shouldLogTime === 'Да') {
+                        if (shouldLogTime === 'Yes') {
                             await jiraService.logTimeForTask(taskId, this.totalActiveTime);
                             this.timer?.reset();
                         }
@@ -112,18 +112,18 @@ export class ActivityTracker {
     }
 
     /**
-     * Логирует время текущей задачи.
+     * Logs time for the current task.
      */
     async logTimeForCurrentTask() {
         if (!this.settings) {
-            this.outputChannel.appendLine(`[Time Tracker] Не удалось залогировать время в задачу ${this.currentTaskId}. Конфигурация отсутствует.`);
+            this.outputChannel.appendLine(`[Time Tracker] Failed to log time for task ${this.currentTaskId}. Configuration missing.`);
             return;
         }
 
-        const {jiraUrl, accessToken } = this.settings;
-        const jiraService = new JiraService( jiraUrl, accessToken, this.outputChannel);
+        const { jiraUrl, accessToken } = this.settings;
+        const jiraService = new JiraService(jiraUrl, accessToken, this.outputChannel);
 
-        const timeSpent = Math.floor(this.timer?.getTime() as number/60);
+        const timeSpent = Math.floor(this.timer?.getTime() as number / 60);
         const success = await jiraService.logTimeForTask(this.currentTaskId, timeSpent);
         this.outputChannel.appendLine(`[logTimeForCurrentTask]\tDEBUG: ${success}.`);
         this.timer?.reset();

@@ -1,21 +1,21 @@
 import * as crypto from 'crypto';
 
 /**
- * Сервис для шифрования и дешифрования данных.
+ * Service for encryption and decryption of data.
  */
 export class EncryptionService {
     private algorithm = 'aes-256-cbc';
     private key: Buffer;
 
     constructor(private secret: string) {
-        // Генерация ключа на основе секрета
+        // Generating a key based on the secret
         this.key = crypto.createHash('sha256').update(secret).digest();
     }
 
     /**
-     * Шифрует данные.
-     * @param {string} text Текст для шифрования.
-     * @returns {string} Зашифрованный текст в формате base64.
+     * Encrypts data.
+     * @param {string} text Text to be encrypted.
+     * @returns {string} Encrypted text in base64 format.
      */
     encrypt(text: string): string {
         const iv = crypto.randomBytes(16);
@@ -26,9 +26,9 @@ export class EncryptionService {
     }
 
     /**
-     * Дешифрует данные.
-     * @param {string} encryptedText Зашифрованный текст в формате base64.
-     * @returns {string} Расшифрованный текст.
+     * Decrypts data.
+     * @param {string} encryptedText Encrypted text in base64 format.
+     * @returns {string} Decrypted text.
      */
     decrypt(encryptedText: string): string {
         const [iv, encrypted] = encryptedText.split(':');
