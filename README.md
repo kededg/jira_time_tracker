@@ -20,9 +20,7 @@ This extension helps developers track the time they spend on coding and automati
   - Inactivity timeout
   - Auto-logging settings
 
-## Usage
-
-For using rules:
+## For Start
 
 - You must use a Git branch name in the format branch_name_user_JIRA_ID. Exp: `tracker/feat/add_timer_PROJ-6666` or `tracker/feat/add_timer_PROJ_6666`
 - Shift+Ctr+P -> Time Tracker. Configure Time Tracker.
