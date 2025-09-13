@@ -28,6 +28,13 @@ This extension helps developers track the time they spend on coding and automati
 
 ## Installation
 
+### From VSCode
+
+1. Download [latest](https://github.com/kededg/jira_time_tracker/releases) release
+2. Use [this](https://stackoverflow.com/questions/42017617/how-can-i-install-vs-code-extension-manually) description
+
+### Manualy 
+
 1. Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/kededg/jira_time_tracker.git
