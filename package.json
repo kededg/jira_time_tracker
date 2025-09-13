@@ -1,7 +1,7 @@
 {
     "name": "time-tracker",
     "displayName": "Time Tracker",
-    "description": "Расширение для отслеживания времени работы над кодом и логирования времени в Jira.",
+    "description": "Extension for tracking time spent on coding and logging time to Jira.",
     "version": "0.0.2",
     "publisher": "kirill.liubushkin",
     "engines": {
@@ -48,27 +48,27 @@
             "timeTracker.jiraUrl": {
                 "type": "string",
                 "default": "https://j.yadro.com",
-                "description": "URL вашего Jira (например, https://j.yadro.com)."
+                    "description": "Your Jira URL (e.g., https://j.yadro.com)."
             },
             "timeTracker.accessToken": {
                 "type": "string",
                 "default": "",
-                "description": "Personal Access Token для доступа к Jira."
+                    "description": "Personal Access Token for accessing Jira."
             },
             "timeTracker.inactivityTimeout": {
                 "type": "number",
                 "default": 10,
-                "description": "Время бездействия в минутах (по умолчанию 10 минут)."
+                    "description": "Inactivity timeout in minutes (default is 10 minutes)."
             },
             "timeTracker.autoLogging": {
                 "type": "boolean",
                 "default": true,
-                "description": "Включить автоматическое логирование времени."
+                    "description": "Enable automatic time logging."
             },
             "timeTracker.autoLoggingTime": {
                 "type": "number",
                 "default": 10,
-                "description": "Время автологирования если провел в задаче больше заданного времени (по умолчанию 10 минут). Другими словами, если сработал таймер бездействия или сменится ветка и до этого было проработано 10 минут, то он предложит это время залогировать. "
+                    "description": "Auto-logging threshold in minutes (default is 10 minutes). If the inactivity timer triggers or the branch changes and you've worked on a task for more than this time, it will prompt you to log that time."
             }
             }
       }
