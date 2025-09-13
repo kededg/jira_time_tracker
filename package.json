@@ -2,8 +2,12 @@
     "name": "time-tracker",
     "displayName": "Time Tracker",
     "description": "Extension for tracking time spent on coding and logging time to Jira.",
-    "version": "0.0.2",
+    "version": "0.3.0-alpha",
     "publisher": "kirill.liubushkin",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kededg/jira_time_tracker.git"
+    },
     "engines": {
         "vscode": "^1.75.0"
     },
@@ -45,31 +49,31 @@
         "configuration": {
             "title": "Time Tracker",
             "properties": {
-            "timeTracker.jiraUrl": {
-                "type": "string",
-                "default": "https://j.yadro.com",
-                    "description": "Your Jira URL (e.g., https://j.yadro.com)."
-            },
-            "timeTracker.accessToken": {
-                "type": "string",
-                "default": "",
-                    "description": "Personal Access Token for accessing Jira."
-            },
-            "timeTracker.inactivityTimeout": {
-                "type": "number",
-                "default": 10,
-                    "description": "Inactivity timeout in minutes (default is 10 minutes)."
-            },
-            "timeTracker.autoLogging": {
-                "type": "boolean",
-                "default": true,
-                    "description": "Enable automatic time logging."
-            },
-            "timeTracker.autoLoggingTime": {
-                "type": "number",
-                "default": 10,
-                    "description": "Auto-logging threshold in minutes (default is 10 minutes). If the inactivity timer triggers or the branch changes and you've worked on a task for more than this time, it will prompt you to log that time."
-            }
+                "timeTracker.jiraUrl": {
+                    "type": "string",
+                    "default": "https://j.yadro.com",
+                        "description": "Your Jira URL (e.g., https://j.yadro.com)."
+                },
+                "timeTracker.accessToken": {
+                    "type": "string",
+                    "default": "",
+                        "description": "Personal Access Token for accessing Jira."
+                },
+                "timeTracker.inactivityTimeout": {
+                    "type": "number",
+                    "default": 10,
+                        "description": "Inactivity timeout in minutes (default is 10 minutes)."
+                },
+                "timeTracker.autoLogging": {
+                    "type": "boolean",
+                    "default": true,
+                        "description": "Enable automatic time logging."
+                },
+                "timeTracker.autoLoggingTime": {
+                    "type": "number",
+                    "default": 10,
+                        "description": "Auto-logging threshold in minutes (default is 10 minutes). If the inactivity timer triggers or the branch changes and you've worked on a task for more than this time, it will prompt you to log that time."
+                }
             }
       }
     },

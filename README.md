@@ -24,8 +24,8 @@ This extension helps developers track the time they spend on coding and automati
 
 1. Clone the repository and install dependencies:
 ```bash
-git clone https://github.com/your-repository/time-tracker.git
-cd time-tracker
+git clone https://github.com/kededg/jira_time_tracker.git
+cd jira_time_tracker
 npm install
 ```
 
