@@ -61,6 +61,16 @@ export class JiraService {
     async logTime(taskId: string, timeSpent: number, msg: string = ""): Promise<boolean> {
         const url = `${this.baseUrl}/rest/api/2/issue/${taskId}/worklog`;
 
+        const SecondsTimeSpent = timeSpent * 60;
+        const now = new Date();
+        const floorToMinutes = new Date(now.getTime() - now.getSeconds() * 1000 - now.getMilliseconds());
+        const startTime = new Date(floorToMinutes.getTime() - (SecondsTimeSpent * 1000));
+        let startTimeString = startTime.toISOString().replace('Z', '+0000');
+
+        this.outputChannel.appendLine(`[logTime]\t: SecondsTimeSpent: ${SecondsTimeSpent} startTimeString: ${startTimeString}`);
+
+        this.outputChannel.appendLine(`[logTime]\tLog start time: ${startTime} ${startTimeString}`);
+
         if (msg == "") {
             msg = "Work on Issue";
         }
@@ -73,7 +83,8 @@ export class JiraService {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    timeSpentSeconds: timeSpent * 60,
+                    started: startTimeString,
+                    timeSpentSeconds: SecondsTimeSpent,
                     comment: `VSCode TimeTracker: ${msg}`
                 }),
             });

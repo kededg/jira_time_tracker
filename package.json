@@ -2,7 +2,7 @@
     "name": "time-tracker",
     "displayName": "Time Tracker",
     "description": "Extension for tracking time spent on coding and logging time to Jira.",
-    "version": "1.0.1-betta",
+    "version": "1.0.2-betta",
     "publisher": "kirill.liubushkin",
     "repository": {
         "type": "git",
