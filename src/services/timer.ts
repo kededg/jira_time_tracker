@@ -88,6 +88,12 @@ export class Timer {
     }
 
 
+    public setTime(time: number): void {
+        this.outputChannel.appendLine(`[setTime]\tTime was set ${time}`);
+        this.timeElapsed = time;
+    }
+
+
     public getTime(): number {
         return this.timeElapsed;
     }
